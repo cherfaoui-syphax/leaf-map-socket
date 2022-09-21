@@ -1,6 +1,10 @@
+import { useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import tileLayer from '../util/tileLayer';
+import io from 'socket.io-client';
+import ContainerDimensions from 'react-container-dimensions';
 
+import {useEffect} from 'react'
 const center = [52.22977, 21.01178];
 
 const points = [
@@ -26,6 +30,7 @@ const points = [
   },
 ];
 
+
 const MyMarkers = ({ data }) => {
   return data.map(({ lat, lng, title }, index) => (
     <Marker
@@ -37,15 +42,49 @@ const MyMarkers = ({ data }) => {
   ));
 }
 
+const socket = io("http://localhost:3001");
 const MapWrapper = () => {
+ 
+
+  const [isConnected, setIsConnected] = useState(socket.connected);
+  const [marks, setMarks] = useState(points);
+
+  useEffect(() => {
+    socket.on('connect', () => {
+      setIsConnected(true);
+    });
+
+    socket.on('disconnect', () => {
+      setIsConnected(false);
+    });
+
+    socket.on('chat message', (msg) => {
+      console.log("Message received");
+      setMarks(JSON.parse(msg));
+    });
+
+    return () => {
+      socket.off('connect');
+      socket.off('disconnect');
+      socket.off('pong');
+    };
+  }, []);
+
+
+  
   return (
+    <>
+    <p>{JSON.stringify(marks)}</p>
+    <ContainerDimensions>
     <MapContainer center={center} zoom={18} scrollWheelZoom={false}>
 
       <TileLayer {...tileLayer} />
 
-      <MyMarkers data={points} />
+      <MyMarkers data={marks} />
 
     </MapContainer>
+    </ContainerDimensions>
+    </>
   )
 }
 

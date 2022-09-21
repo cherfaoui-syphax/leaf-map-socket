@@ -124,7 +124,7 @@ main {
 
 @media (max-width: 900px) {
   .grid {
-    grid-template-columns: 100%;
+    grid-template-columns: 10%;
     grid-template-areas:
       "head"
       "main";
